@@ -1,7 +1,9 @@
 // https://medium.com/flutter-io/zero-to-one-with-flutter-43b13fd7b354
+// from:     For reasons of exposition, our first go at this will be ugly:
 
 import 'dart:math';
-
+import 'dart:ui' show lerpDouble;
+import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -13,13 +15,47 @@ class ChartPage extends StatefulWidget {
   ChartPageState createState() => ChartPageState();
 }
 
-class ChartPageState extends State<ChartPage> {
+class ChartPageState extends State<ChartPage> with TickerProviderStateMixin {
   final random = Random();
   int dataSet = 50;
+  AnimationController animation;
+  double startHeight;   // Strike one.
+  double currentHeight; // Strike two.
+  double endHeight;     // Strike three. Refactor.
+
+  @override
+  void initState() {
+    super.initState();
+    animation = AnimationController(
+      duration: const Duration(milliseconds: 1300),
+      vsync: this,
+    )..addListener(() {
+        setState(() {
+          currentHeight = lerpDouble( // Strike one.
+            startHeight,
+            endHeight,
+            animation.value,
+          );
+        });
+      });
+    startHeight = 0.0;                // Strike two.
+    currentHeight = 0.0;
+    endHeight = dataSet.toDouble();
+    animation.forward();
+  }
+
+  @override
+  void dispose() {
+    animation.dispose();
+    super.dispose();
+  }
 
   void changeData() {
     setState(() {
-      dataSet = random.nextInt(100);
+      startHeight = currentHeight;    // Strike three. Refactor.
+      dataSet = random.nextInt(200);
+      endHeight = dataSet.toDouble();
+      animation.forward(from: 0.0);
     });
   }
 
@@ -29,7 +65,7 @@ class ChartPageState extends State<ChartPage> {
       body: Center(
         child: CustomPaint(
           size: Size(200.0, 100.0),
-          painter: BarChartPainter(dataSet.toDouble()),
+          painter: BarChartPainter(currentHeight),
         ),
       ),
       floatingActionButton: FloatingActionButton(
