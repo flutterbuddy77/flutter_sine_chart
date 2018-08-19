@@ -1,1 +1,8 @@
-# dart_sine_chart
+# flutter_sine_chart
+
+A new Flutter project.
+
+## Getting Started
+
+For help getting started with Flutter, view our online
+[documentation](https://flutter.io/).
