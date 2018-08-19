@@ -1,9 +1,7 @@
-// https://medium.com/flutter-io/zero-to-one-with-flutter-43b13fd7b354
-// from:     We can clean up our code using a single Tween<double> for the bar height:
+// Zipzit original work.  Draw a simple sine wave.
 
 import 'dart:math';
-
-import 'package:flutter/animation.dart';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -15,37 +13,34 @@ class ChartPage extends StatefulWidget {
   ChartPageState createState() => ChartPageState();
 }
 
-class ChartPageState extends State<ChartPage> with TickerProviderStateMixin {
-  final random = Random();
-  int dataSet = 50;
-  AnimationController animation;
-  Tween<double> tween;
-
-  @override
-  void initState() {
-    super.initState();
-    animation = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    tween = Tween<double>(begin: 0.0, end: dataSet.toDouble());
-    animation.forward();
-  }
-
-  @override
-  void dispose() {
-    animation.dispose();
-    super.dispose();
-  }
+class ChartPageState extends State<ChartPage> {
+  static double radPerDegree = 2.0 * pi / 360.0;
+  static double degreesPerTic = 7.0;
+  static double amplitudeFactor = 100.0;
+  List<Offset> data = [
+    new Offset(0.0, amplitudeFactor * sin(0.0 * degreesPerTic * radPerDegree))
+  ];
 
   void changeData() {
     setState(() {
-      dataSet = random.nextInt(100);
-      tween = Tween<double>(
-        begin: tween.evaluate(animation),
-        end: dataSet.toDouble(),
-      );
-      animation.forward(from: 0.0);
+      for (var i = 0; i < 10; i++) {
+        var nextDegree = data[data.length - 1].dx + 1;
+        data.add(new Offset(nextDegree,
+            amplitudeFactor * sin(nextDegree * degreesPerTic * radPerDegree)));
+      }
+      print(data.length);
+      if (data.length > 300){
+        clearData();
+      }
+    });
+  }
+
+  void clearData() {
+    setState(() {
+      data = [
+        new Offset(
+            0.0, amplitudeFactor * sin(0.0 * degreesPerTic * radPerDegree))
+      ];
     });
   }
 
@@ -55,43 +50,34 @@ class ChartPageState extends State<ChartPage> with TickerProviderStateMixin {
       body: Center(
         child: CustomPaint(
           size: Size(200.0, 100.0),
-          painter: BarChartPainter(tween.animate(animation)),
+          painter: LineChartPainter(data),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: new FloatingActionButton(
         child: Icon(Icons.refresh),
         onPressed: changeData,
+        heroTag: null,
       ),
     );
   }
 }
 
-class BarChartPainter extends CustomPainter {
-  static const barWidth = 10.0;
+class LineChartPainter extends CustomPainter {
+  // https://stackoverflow.com/questions/46799285/how-to-draw-line-chart-for-flutter-app
+  LineChartPainter(this.data);
 
-  BarChartPainter(Animation<double> animation)
-      : animation = animation,
-        super(repaint: animation);
-
-  final Animation<double> animation;
+  final List<Offset> data;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final barHeight = animation.value;
     final paint = Paint()
-      ..color = Colors.blue[400]
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(
-      Rect.fromLTWH(
-        (size.width - barWidth) / 2.0,
-        size.height - barHeight,
-        barWidth,
-        barHeight,
-      ),
-      paint,
-    );
+      ..color = Colors.red
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.fill
+      ..strokeWidth = 4.0;
+    canvas.drawPoints(PointMode.polygon, data, paint);  // PointMode.lines = dotted line, ugh..
   }
 
   @override
-  bool shouldRepaint(BarChartPainter old) => false;
+  bool shouldRepaint(LineChartPainter old) => data.length != old.data.length;
 }
