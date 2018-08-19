@@ -24,12 +24,12 @@ class ChartPageState extends State<ChartPage> {
   void changeData() {
     setState(() {
       for (var i = 0; i < 10; i++) {
-        var nextDegree = data[data.length - 1].dx + 1;
-        data.add(new Offset(nextDegree,
-            amplitudeFactor * sin(nextDegree * degreesPerTic * radPerDegree)));
+        var nextTic = data[data.length - 1].dx + 1;
+        data.add(new Offset(nextTic,
+            amplitudeFactor * sin(nextTic * degreesPerTic * radPerDegree)));
       }
       print(data.length);
-      if (data.length > 300){
+      if (data.length > 300) {
         clearData();
       }
     });
@@ -75,7 +75,8 @@ class LineChartPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.fill
       ..strokeWidth = 4.0;
-    canvas.drawPoints(PointMode.polygon, data, paint);  // PointMode.lines = dotted line, ugh..
+    canvas.drawPoints(
+        PointMode.polygon, data, paint); // PointMode.lines = dotted line, ugh..
   }
 
   @override
